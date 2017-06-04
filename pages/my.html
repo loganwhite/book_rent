@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>My home Page</title>
+	<link rel="stylesheet" href="">
+</head>
+<body>
+	<div>
+		<form action="search" method="post" accept-charset="utf-8">
+			<input type="text" name="keyword">
+			<input type="submit" value="Search">
+		</form>
+	</div>
+	<div>
+		<table>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>ISBN</th>
+					<th>Status</th>
+					<th>Start time</th>
+					<th>End time</th>
+					<th>Operation</th>
+				</tr>
+			</thead>
+			<tbody>
+			{{range .}}
+				<tr>
+					<td>{{.id}}</td>
+					<td>{{.book_name}}</td>
+					<td>{{.isbn}}</td>
+					<td>{{.status}}</td>
+					<td>{{.rent_time}}</td>
+					<td>{{.complete_time}}</td>
+					<td><button>Complete Rent</button></td>
+				</tr>
+			{{end}}
+			</tbody>
+		</table>
+	</div>
+</body>
+</html>
