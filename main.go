@@ -305,6 +305,111 @@ func handle_add_book(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handle_return_book(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+
+		rent_id := r.FormValue("rent_id")
+
+		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		checkErr(err)
+		defer db.Close()
+
+		//check user exist
+		var status bool
+		err = db.QueryRow("SELECT status FROM t_rent where id=?", rent_id).Scan(&status)
+		//checkErr(err)
+		if sql.ErrNoRows == err || status == true {
+			fmt.Fprint(w, "Wrong borrow id or the book has been returned\n")
+			return
+		}
+
+		stmt, err := db.Prepare("update t_rent set complete_time=?,status=? where id=?")
+		checkErr(err)
+
+		complete_time := time.Now().Unix()
+		res, err := stmt.Exec(complete_time, 1, rent_id)
+		checkErr(err)
+
+		affect, err := res.RowsAffected()
+		checkErr(err)
+
+		if affect != 1 {
+			fmt.Fprint(w, "error updating database")
+			return
+		}
+
+		stmt, err = db.Prepare("update t_book set left_count=left_count+1 where t_book.id=(select book_id from t_rent where t_rent.id=?)")
+		checkErr(err)
+
+		res, err = stmt.Exec(rent_id)
+		checkErr(err)
+
+		affect, err = res.RowsAffected()
+		checkErr(err)
+
+		if affect != 1 {
+			fmt.Fprint(w, "error updating database")
+			return
+		}
+
+		fmt.Fprint(w, "Success!")
+
+	}
+}
+
+func handle_borrow_book(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		book_id := r.FormValue("book_id")
+		user_id, err := get_cur_user_id(r)
+		checkErr(err)
+
+		var left_count int
+
+		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		checkErr(err)
+		defer db.Close()
+
+		//check user exist
+		err = db.QueryRow("SELECT left_count FROM t_book where id=?", book_id).Scan(&left_count)
+		//checkErr(err)
+		if sql.ErrNoRows == err || left_count <= 0 {
+			fmt.Fprint(w, "Wrong book id or the book is not availible\n")
+			return
+		}
+
+		stmt, err := db.Prepare("INSERT t_rent SET book_id=?,user_id=?,rent_time=?,status=?")
+		checkErr(err)
+
+		rent_time := time.Now().Unix()
+		res, err := stmt.Exec(book_id, user_id, rent_time, 0)
+		checkErr(err)
+
+		affect, err := res.RowsAffected()
+		checkErr(err)
+
+		if affect != 1 {
+			fmt.Fprint(w, "error updating database")
+			return
+		}
+
+		stmt, err = db.Prepare("update t_book set left_count=left_count-1 where t_book.id=?")
+		checkErr(err)
+
+		res, err = stmt.Exec(book_id)
+		checkErr(err)
+
+		affect, err = res.RowsAffected()
+		checkErr(err)
+
+		if affect != 1 {
+			fmt.Fprint(w, "error updating database")
+			return
+		}
+
+		fmt.Fprint(w, "Success!")
+	}
+}
+
 func main() {
 	http.HandleFunc("/", index_page)
 	http.HandleFunc("/register", handle_register)
@@ -313,6 +418,9 @@ func main() {
 	http.HandleFunc("/search", handle_search)
 	http.HandleFunc("/manage", handle_manage)
 	http.HandleFunc("/add_book", handle_add_book)
+
+	http.HandleFunc("/return", handle_return_book)
+	http.HandleFunc("/borrow", handle_borrow_book)
 
 	err := http.ListenAndServe(":9090", nil) //设置监听的端口
 	if err != nil {

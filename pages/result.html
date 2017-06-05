@@ -38,6 +38,27 @@
 	</div>
 	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script type="text/javascript" charset="utf-8">
+		$(document).ready(function() {
+			$(".table").on('click','.btn',function() {
+				var $id = $(this).parent().prev().prev().prev().prev().prev().prev();
+				var $left_count = $(this).parent().prev();
+				if ($left_count.text() == "0") {
+					alert("This book is not availible!");
+					return;
+				}
+				$.ajax({
+					url:'borrow',
+					method:'post',
+					data:{'book_id':$id.text()},
+					success: function(resData) {
+						alert(resData);
+						if (resData == 'Success!') location.reload();
+					}
+				});
+			});
+		});
+	</script>
 </body>
 
 </html>
