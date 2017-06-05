@@ -4,16 +4,44 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Register</title>
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 <body>
-	<div>
-		<form action="register" method="post" accept-charset="utf-8">
-			Name:<input type="text" name="name">
-			Username:<input type="text" name="username">
-			Password:<input type="password" name="password">
-			Stu_no:<input type="text" name="stu_no">
-			<input type="submit" value="Register">
+	<div class="container">
+		<div style="text-align: center; font-size: 16px; font-weight: 600; margin: 2em auto;">注册</div>
+		<form  class="form-horizontal" action="register" method="post" accept-charset="utf-8">
+		  <div class="form-group">
+		    <label for="name" class="col-sm-2 control-label">Name:</label>
+		    <div class="col-sm-10">
+		      <input type="text" name="name" class="form-control" id="name" placeholder="Name">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="username" class="col-sm-2 control-label">Username:</label>
+		    <div class="col-sm-10">
+		      <input type="text" name="username" class="form-control" id="username" placeholder="User Name">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="password" class="col-sm-2 control-label">Password:</label>
+		    <div class="col-sm-10">
+		      <input type="password" name="password" class="form-control" id="password" placeholder="Password">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="stu_no" class="col-sm-2 control-label">Student No.:</label>
+		    <div class="col-sm-10">
+		      <input type="text" name="stu_no" class="form-control" id="stu_no" placeholder="Student No.">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <div class="col-sm-offset-2 col-sm-10">
+		      <button type="submit" class="btn btn-primary">Register</button>
+		    </div>
+		  </div>
 		</form>
 	</div>
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 </body>
 </html>
