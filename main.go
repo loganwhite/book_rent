@@ -52,7 +52,7 @@ func handle_login(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 		checkErr(err)
 
 		var queried_password string
@@ -93,7 +93,7 @@ func handle_register(w http.ResponseWriter, r *http.Request) {
 		stu_no := r.FormValue("stu_no")
 		username := r.FormValue("username")
 
-		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 		checkErr(err)
 
 		//check user exist
@@ -157,7 +157,7 @@ func handle_my(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("user id:", id)
 
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+	db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 	checkErr(err)
 
 	rows, err := db.Query("SELECT t_rent.id, t_book.book_name, t_book.isbn, status, rent_time, complete_time FROM t_rent join t_book on t_book.id= t_rent.book_id where user_id=?", id)
@@ -195,7 +195,7 @@ func handle_search(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("user id:", id)
 
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+	db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 	defer db.Close()
 	checkErr(err)
 
@@ -239,7 +239,7 @@ func handle_manage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get user
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+	db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 	checkErr(err)
 	defer db.Close()
 
@@ -268,7 +268,7 @@ func handle_add_book(w http.ResponseWriter, r *http.Request) {
 		isbn := r.FormValue("isbn")
 		book_name := r.FormValue("book_name")
 
-		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 		checkErr(err)
 		defer db.Close()
 
@@ -310,7 +310,7 @@ func handle_return_book(w http.ResponseWriter, r *http.Request) {
 
 		rent_id := r.FormValue("rent_id")
 
-		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 		checkErr(err)
 		defer db.Close()
 
@@ -365,7 +365,7 @@ func handle_borrow_book(w http.ResponseWriter, r *http.Request) {
 
 		var left_count int
 
-		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		db, err := sql.Open("mysql", "root:logan@tcp(localhost:3306)/book_rent?charset=utf8")
 		checkErr(err)
 		defer db.Close()
 
