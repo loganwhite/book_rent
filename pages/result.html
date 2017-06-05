@@ -8,7 +8,7 @@
 <body>
 	<div>
 		<table>
-			<caption>图书角所有图书</caption>
+			<caption>图书角所有图书查询结果</caption>
 			<thead>
 				<tr>
 					<th>ID</th>
@@ -23,12 +23,12 @@
 			<tbody>
 			{{range .}}
 				<tr>
-					<td>{{.id}}</td>
-					<td>{{.name}}</td>
-					<td>{{.isbn}}</td>
-					<td>{{.price}}</td>
-					<td>{{.count}}</td>
-					<td>{{.left}}</td>
+					<td>{{.Id}}</td>
+					<td>{{.Name}}</td>
+					<td>{{.Isbn}}</td>
+					<td>{{.Price}}</td>
+					<td>{{.Count}}</td>
+					<td>{{.Left}}</td>
 					<td><button>Borrrow</button></td>
 				</tr>
 			{{end}}

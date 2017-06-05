@@ -14,21 +14,21 @@ import (
 )
 
 type Rent_entry struct {
-	id            int64
-	name          string
-	isbn          string
-	rent_time     int64
-	complete_time int64
-	status        bool
+	Id            int64
+	Book_name     string
+	Isbn          string
+	Rent_time     int64
+	Complete_time int64
+	Status        bool
 }
 
 type Book_entry struct {
-	id    int64
-	name  string
-	isbn  string
-	price float32
-	count int
-	left  int
+	Id    int64
+	Name  string
+	Isbn  string
+	Price float32
+	Count int
+	Left  int
 }
 
 func index_page(w http.ResponseWriter, r *http.Request) {
@@ -69,9 +69,7 @@ func handle_login(w http.ResponseWriter, r *http.Request) {
 
 			//setting cookie
 			fmt.Println("setting cookie")
-			expiration := time.Now()
-			expiration = expiration.AddDate(1, 0, 0)
-			cookie := http.Cookie{Name: "uid", Value: strconv.FormatInt(uid, 10), Expires: expiration}
+			cookie := http.Cookie{Name: "uid", Value: strconv.FormatInt(uid, 10), Path: "/", MaxAge: 3600}
 			http.SetCookie(w, &cookie)
 
 			http.Redirect(w, r, "/my", 302)
@@ -101,8 +99,7 @@ func handle_register(w http.ResponseWriter, r *http.Request) {
 		//check user exist
 		var is_exist int
 		err = db.QueryRow("SELECT 1 FROM t_user where stu_no=? or username=?", stu_no, username).Scan(&is_exist)
-		checkErr(err)
-		if is_exist == 1 {
+		if sql.ErrNoRows != err {
 			t, _ := template.ParseFiles("pages/failed.html")
 			log.Println(t.Execute(w, nil))
 			return
@@ -136,6 +133,20 @@ func handle_register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handl_logout(w http.ResponseWriter, r *http.Request) {
+	_, err := get_cur_user_id(r)
+	if err != nil {
+		fmt.Println("not logged into the sys")
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	// expires cookie
+	cookie := http.Cookie{Name: "uid", Path: "/", MaxAge: -1}
+	http.SetCookie(w, &cookie)
+
+}
+
 func handle_my(w http.ResponseWriter, r *http.Request) {
 	id, err := get_cur_user_id(r)
 	if err != nil {
@@ -149,8 +160,9 @@ func handle_my(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
 	checkErr(err)
 
-	rows, err := db.Query("SELECT t_rent.id, t_book.name, t_book.isbn, status, rent_time, complete_time FROM t_rent join t_book on t_book.id= t_rent.book_id where user_id=?", id)
+	rows, err := db.Query("SELECT t_rent.id, t_book.book_name, t_book.isbn, status, rent_time, complete_time FROM t_rent join t_book on t_book.id= t_rent.book_id where user_id=?", id)
 	checkErr(err)
+	db.Close()
 
 	data := []Rent_entry{}
 	tRes := Rent_entry{}
@@ -161,12 +173,12 @@ func handle_my(w http.ResponseWriter, r *http.Request) {
 		var status bool
 		var rent_time, complete_time int64
 		rows.Scan(&rid, &name, &isbn, &status, &rent_time, &complete_time)
-		tRes.id = rid
-		tRes.name = name
-		tRes.isbn = isbn
-		tRes.rent_time = rent_time
-		tRes.complete_time = complete_time
-		tRes.status = status
+		tRes.Id = rid
+		tRes.Book_name = name
+		tRes.Isbn = isbn
+		tRes.Rent_time = rent_time
+		tRes.Complete_time = complete_time
+		tRes.Status = status
 		data = append(data, tRes)
 	}
 	t, _ := template.ParseFiles("pages/my.html")
@@ -184,12 +196,16 @@ func handle_search(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("user id:", id)
 
 	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+	defer db.Close()
 	checkErr(err)
 
 	r.ParseForm()
 	keyword := r.FormValue("keyword")
 	fmt.Println("keyword:", keyword)
-	rows, err := db.Query("SELECT id, name, isbn, price, count FROM t_book where contains(name, ?) or isbn=?", keyword, keyword)
+	isbn := keyword
+	keyword = "%" + keyword + "%"
+	fmt.Println("keyword changed: ", keyword)
+	rows, err := db.Query("SELECT id, book_name, isbn, price, count, left_count FROM t_book where book_name like ? or isbn=?", keyword, isbn)
 	checkErr(err)
 
 	data := []Book_entry{}
@@ -198,18 +214,95 @@ func handle_search(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id int64
 		var name, isbn string
-		var count int
+		var count, left int
 		var price float32
-		rows.Scan(&id, &name, &isbn, &price, &count)
-		tRes.id = id
-		tRes.name = name
-		tRes.isbn = isbn
-		tRes.count = count
-		tRes.price = price
+		rows.Scan(&id, &name, &isbn, &price, &count, &left)
+		tRes.Id = id
+		tRes.Name = name
+		tRes.Isbn = isbn
+		tRes.Count = count
+		tRes.Price = price
+		tRes.Left = left
+		fmt.Printf("%d %s %s %f %d %d\n", id, name, isbn, price, count, left)
 		data = append(data, tRes)
 	}
 	t, _ := template.ParseFiles("pages/result.html")
 	log.Println(t.Execute(w, data))
+}
+
+func handle_manage(w http.ResponseWriter, r *http.Request) {
+	id, err := get_cur_user_id(r)
+	if err != nil {
+		fmt.Println("not logged into the sys")
+		failedPage(w)
+		return
+	}
+
+	// get user
+	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+	checkErr(err)
+	defer db.Close()
+
+	//check user exist
+	var type_id int
+	err = db.QueryRow("SELECT type_id FROM t_user where id=?", id).Scan(&type_id)
+	checkErr(err)
+
+	if type_id != 2 {
+		failedPage(w)
+		return
+	}
+
+	t, _ := template.ParseFiles("pages/manage.html")
+	log.Println(t.Execute(w, nil))
+
+}
+
+func handle_add_book(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	if r.Method == "POST" {
+		r.ParseForm()
+
+		price := r.FormValue("price")
+		count := r.FormValue("count")
+		isbn := r.FormValue("isbn")
+		book_name := r.FormValue("book_name")
+
+		db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/book_rent?charset=utf8")
+		checkErr(err)
+		defer db.Close()
+
+		//check user exist
+		var is_exist int
+		err = db.QueryRow("SELECT 1 FROM t_book where isbn=?", isbn).Scan(&is_exist)
+		//checkErr(err)
+		if sql.ErrNoRows != err {
+			t, _ := template.ParseFiles("pages/manage.html")
+			log.Println(t.Execute(w, nil))
+			return
+		}
+
+		//插入数据
+		stmt, err := db.Prepare("INSERT t_book SET book_name=?,isbn=?,price=?,count=?,left_count=?")
+		checkErr(err)
+
+		res, err := stmt.Exec(book_name, isbn, price, count, count)
+		checkErr(err)
+
+		affected, err := res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println(affected)
+		db.Close()
+		if affected == 1 {
+			t, _ := template.ParseFiles("pages/add_success.html")
+			log.Println(t.Execute(w, nil))
+		}
+
+	} else if r.Method == "GET" {
+		t, _ := template.ParseFiles("pages/manage.html")
+		log.Println(t.Execute(w, nil))
+	}
 }
 
 func main() {
@@ -218,6 +311,8 @@ func main() {
 	http.HandleFunc("/login", handle_login)
 	http.HandleFunc("/my", handle_my)
 	http.HandleFunc("/search", handle_search)
+	http.HandleFunc("/manage", handle_manage)
+	http.HandleFunc("/add_book", handle_add_book)
 
 	err := http.ListenAndServe(":9090", nil) //设置监听的端口
 	if err != nil {
@@ -240,6 +335,9 @@ func checkErr(err error) {
 //return
 func get_cur_user_id(r *http.Request) (int64, error) {
 	cookie, cookie_err := r.Cookie("uid")
+	if cookie_err != nil {
+		return 0, cookie_err
+	}
 	id, _ := strconv.ParseInt(cookie.Value, 10, 64)
 	return id, cookie_err
 }

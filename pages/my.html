@@ -14,6 +14,10 @@
 		</form>
 	</div>
 	<div>
+		<a href="manage">Management</a>
+	</div>
+	<div><a href="logout">Logout</a></div>
+	<div>
 		<table>
 			<thead>
 				<tr>
@@ -29,12 +33,12 @@
 			<tbody>
 			{{range .}}
 				<tr>
-					<td>{{.id}}</td>
-					<td>{{.book_name}}</td>
-					<td>{{.isbn}}</td>
-					<td>{{.status}}</td>
-					<td>{{.rent_time}}</td>
-					<td>{{.complete_time}}</td>
+					<td>{{.Id}}</td>
+					<td>{{.Book_name}}</td>
+					<td>{{.Isbn}}</td>
+					<td>{{.Status}}</td>
+					<td>{{.Rent_time}}</td>
+					<td>{{.Complete_time}}</td>
 					<td><button>Complete Rent</button></td>
 				</tr>
 			{{end}}

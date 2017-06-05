@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>SUCCESS!</title>
+</head>
+<body>
+	<div>
+		<h1 style="text-align: center;">SUCCESS!</h1>
+	</div>
+	<span id="time">10</span>s Left to redirect to home page.
+	<script type="text/javascript" charset="utf-8">
+		var time_elem = document.getElementById("time");
+		setInterval(function() {
+			var time = parseInt(time_elem.innerHTML);
+			if (time <= 1) window.location.href="/manage";
+			time -= 1;
+			time_elem.innerHTML = time;
+		}, 1000)
+	</script>
+</body>
+</html>
